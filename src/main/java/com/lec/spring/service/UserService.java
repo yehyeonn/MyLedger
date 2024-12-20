@@ -7,6 +7,11 @@ public interface UserService {
 
     User findById(Long id);
 
+    int register(User user);
+
     boolean isExist(String username);
-    // TODO
+
+    int save(User user);
+
+    int update(User user);
 }
