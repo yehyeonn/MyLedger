@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lec.spring.repository.TransactionsRepository">
+
+    <resultMap id="TransactionResultMap" type="com.lec.spring.domain.Transactions">
+        <id property="id" column="transaction_id"/>
+        <result property="amount" column="amount"/>
+        <result property="currency" column="currency"/>
+        <result property="date" column="date"/>
+        <result property="contents" column="contents"/>
+        <result property="type" column="type"/>
+        <result property="is_recurring" column="is_recurring"/>
+        <result property="recurrence_frequency" column="recurrence_frequency"/>
+        <result property="user_id" column="user_id"/>
+        <result property="categories_id" column="category_id"/>
+    </resultMap>
+
+
+    <sql id="SELECT_BASE">
+        SELECT
+            t.id
+            , t.amount
+            , t.currency
+            , t.date
+            , t.contents
+            , t.type
+            , t.is_recurring
+            , t.recurrence_frequency
+            , u.id
+            , c.id
+            , c.name
+        FROM Transactions t
+        INNER JOIN USER u ON t.user_id = u.id
+        INNER JOIN CATEGORIES c ON t.categories_id = c.id
+        WHERE 1 = 1
+    </sql>
+
+    <select id="findByMonth"  resultMap="TransactionResultMap">
+        <include refid="SELECT_BASE"/>
+        AND YEAR(t.date) = #{year}
+        AND MONTH(t.date) = #{month}
+        AND u.id = #{userId}
+    </select>
+
+    <select id="findByDay"  resultMap="TransactionResultMap">
+        <include refid="SELECT_BASE"/>
+        AND t.date = #{date}
+        AND u.id = #{userId}
+    </select>
+
+    <select id="findFixedExpenses"  resultMap="TransactionResultMap">
+        <include refid="SELECT_BASE"/>
+        AND type = 'expense'
+        AND is_recurring = true
+        AND u.id = #{userId}
+    </select>
+
+    <select id="findByUserId"  resultMap="TransactionResultMap">
+        <include refid="SELECT_BASE"/>
+        AND u.id = #{userId}
+    </select>
+
+    <select id="findById"  resultMap="TransactionResultMap">
+        <include refid="SELECT_BASE"/>
+        AND t.id = #{id}
+    </select>
+
+    <insert id="save" flushCache="true" parameterType="com.lec.spring.domain.Transactions"
+            useGeneratedKeys="true" keyColumn="id" keyProperty="id">
+        INSERT INTO TRANSACTIONS(user_id, categories_id, amount, currency, date, contents, type, is_recurring, recurrence_frequency)
+            VALUE(#{user_id}, #{categories_id}, #{amount}, #{currency}, #{date}, #{contents}, #{type}, #{is_recurring}, #{recurrence_frequency})
+    </insert>
+
+    <update id="update" flushCache="true" parameterType="com.lec.spring.domain.Transactions">
+        UPDATE TRANSACTIONS SET amount = #{amount}, currency = #{currency}, date = #{date}, contents = #{contents}, type = #{type}
+                            , is_recurring = #{is_recurring}, categories_id = #{categories_id}
+        WHERE id = #{id}
+        AND user_id = #{user_id}
+    </update>
+
+    <delete id="delete" flushCache="true" parameterType="map">
+        DELETE FROM TRANSACTIONS
+        WHERE id = #{id}
+        AND user_id = #{user_id}
+    </delete>
+
+</mapper>
